@@ -11,13 +11,28 @@ app.use(cors());
 
 const PORT = process.env.PORT || 3001;
 
+const client = jwksClient({
+  jwksUri: 'https://dev-2i4-k7bf.us.auth0.com/.well-known/jwks.json'
+});
+
+function getKey(header, callback){
+  client.getSigningKey(header.kid, function(err, key) {
+    var signingKey = key.publicKey || key.rsaPublicKey;
+    callback(null, signingKey);
+  });
+}
+
 app.get('/test', (request, response) => {
 
-  // TODO: 
-  // STEP 1: get the jwt from the headers
-  // STEP 2. use the jsonwebtoken library to verify that it is a valid jwt
-  // jsonwebtoken dock - https://www.npmjs.com/package/jsonwebtoken
-  // STEP 3: to prove that everything is working correctly, send the opened jwt back to the front-end
+  const token = req.headers.authorization.split(' ')[1];
+
+  jwt.verify(token, getKey, {}, function(err, user) {
+    if (err) {
+      res.send('invalid token - you cannot access this route');
+    } else {
+      res.json({ 'token': token })
+    }
+  });
 
 })
 
